@@ -1,0 +1,70 @@
+name: Build And Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to publish assets to, e.g. v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.asset_name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: node18-linux-x64
+            asset_name: ytwav-linux-x64
+          - target: node18-macos-arm64
+            asset_name: ytwav-macos-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve Release Tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ inputs.release_tag }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Binary In Docker
+        run: |
+          docker build \
+            --file Dockerfile.release \
+            --build-arg PKG_TARGET=${{ matrix.target }} \
+            --build-arg OUTPUT_NAME=${{ matrix.asset_name }} \
+            --tag ytwav-build:${{ matrix.asset_name }} \
+            .
+
+      - name: Extract Binary
+        run: |
+          mkdir -p dist
+          container_id="$(docker create ytwav-build:${{ matrix.asset_name }})"
+          trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
+          docker cp "$container_id:/${{ matrix.asset_name }}" "dist/${{ matrix.asset_name }}"
+          chmod +x "dist/${{ matrix.asset_name }}"
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: dist/${{ matrix.asset_name }}
+          fail_on_unmatched_files: true

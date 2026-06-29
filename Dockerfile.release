@@ -1,0 +1,22 @@
+FROM node:20-bookworm AS build
+
+WORKDIR /workspace
+
+COPY package.json package-lock.json ./
+RUN npm ci --include=dev
+
+COPY . .
+
+ARG PKG_TARGET
+ARG OUTPUT_NAME
+
+RUN test -n "$PKG_TARGET"
+RUN test -n "$OUTPUT_NAME"
+RUN mkdir -p /out \
+  && npx --yes pkg@5.8.1 package.json --targets "$PKG_TARGET" --output "/out/$OUTPUT_NAME"
+
+FROM scratch
+
+ARG OUTPUT_NAME
+
+COPY --from=build /out/${OUTPUT_NAME} /${OUTPUT_NAME}

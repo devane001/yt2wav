@@ -1,0 +1,47 @@
+{
+  "name": "youtube-download",
+  "version": "1.0.0",
+  "description": "CLI tool to download a public YouTube video as a WAV file",
+  "main": "src/cli.js",
+  "bin": {
+    "ytwav": "./bin/youtube-wav.js"
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node ./bin/youtube-wav.js",
+    "test": "node --test",
+    "build:pkg": "pkg package.json",
+    "build:bin": "npm run build:macos-arm64",
+    "build:macos-arm64": "npm run build:pkg -- --targets node18-macos-arm64 --output dist/ytwav-macos-arm64",
+    "build:linux-x64": "npm run build:pkg -- --targets node18-linux-x64 --output dist/ytwav-linux-x64",
+    "link:bin": "mkdir -p \"$HOME/bin\" && ln -sfn \"$(pwd)/dist/ytwav-macos-arm64\" \"$HOME/bin/ytwav\""
+  },
+  "keywords": [
+    "youtube",
+    "yt-dlp",
+    "wav",
+    "cli",
+    "audio"
+  ],
+  "author": "",
+  "license": "ISC",
+  "pkg": {
+    "scripts": [
+      "bin/**/*.js",
+      "src/**/*.js"
+    ],
+    "assets": [
+      "node_modules/@choewy/yt-dlp/bin/**/*",
+      "node_modules/ffmpeg-static/**/*"
+    ]
+  },
+  "dependencies": {
+    "@choewy/yt-dlp": "^1.1.0",
+    "ffmpeg-static": "^5.3.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  }
+}
