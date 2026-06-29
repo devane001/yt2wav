@@ -18,9 +18,31 @@ permissions:
   contents: write
 
 jobs:
+  prepare_release:
+    name: Prepare Release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Resolve Release Tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "RELEASE_TAG=${{ inputs.release_tag }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> "$GITHUB_ENV"
+          else
+            echo "RELEASE_TAG=${GITHUB_REF_NAME}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Create Or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          fail_on_unmatched_files: false
+
   build:
     name: Build ${{ matrix.asset_name }}
     runs-on: ubuntu-24.04
+    needs: prepare_release
     strategy:
       fail-fast: false
       matrix:
@@ -61,3 +83,4 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           files: dist/${{ matrix.asset_name }}
           fail_on_unmatched_files: true
+          append_body: false
