@@ -16,7 +16,7 @@
     "build:bin": "npm run build:macos-arm64",
     "build:macos-arm64": "npm run build:pkg -- --targets node18-macos-arm64 --output dist/ytwav-macos-arm64",
     "build:linux-x64": "npm run build:pkg -- --targets node18-linux-x64 --output dist/ytwav-linux-x64",
-    "link:bin": "mkdir -p \"$HOME/bin\" && ln -sfn \"$(pwd)/dist/ytwav-macos-arm64\" \"$HOME/bin/ytwav\""
+    "link:bin": "BIN_DIR=\"${YTWAV_BIN_DIR:-$HOME/bin}\" && mkdir -p \"$BIN_DIR\" && ln -sfn \"$(pwd)/dist/ytwav-macos-arm64\" \"$BIN_DIR/ytwav\""
   },
   "keywords": [
     "youtube",

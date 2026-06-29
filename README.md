@@ -88,6 +88,12 @@ npm run link:bin
 $HOME/bin/ytwav
 ```
 
+如果你本地想覆盖这个目录，例如改到 `~/work/bin`：
+
+```bash
+YTWAV_BIN_DIR="$HOME/work/bin" npm run link:bin
+```
+
 可选的多平台构建命令：
 
 ```bash
