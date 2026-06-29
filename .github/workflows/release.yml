@@ -47,20 +47,13 @@ jobs:
 
       - name: Build Binary In Docker
         run: |
+          mkdir -p dist
           docker build \
             --file Dockerfile.release \
             --build-arg PKG_TARGET=${{ matrix.target }} \
             --build-arg OUTPUT_NAME=${{ matrix.asset_name }} \
-            --tag ytwav-build:${{ matrix.asset_name }} \
+            --output "type=local,dest=dist" \
             .
-
-      - name: Extract Binary
-        run: |
-          mkdir -p dist
-          container_id="$(docker create ytwav-build:${{ matrix.asset_name }})"
-          trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
-          docker cp "$container_id:/${{ matrix.asset_name }}" "dist/${{ matrix.asset_name }}"
-          chmod +x "dist/${{ matrix.asset_name }}"
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
